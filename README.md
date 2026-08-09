@@ -63,6 +63,7 @@ arize-phoenix-service/
 ├── IDEA.md                         ← 最初的點子
 ├── docs/
 │   ├── production-deployment-plan.md   生產環境藍圖：K8s 架構、高可用、升級/DR runbook
+│   ├── deployment-strategy-decision.md 部署策略決策：每 App 自建 vs 中央平台統一建
 │   ├── local-implementation-notes.md   本機實作手冊：啟動指令、憑證、踩過的坑
 │   └── phoenix-auth-code-map.md        auth 登入功能的原始碼導覽（含行號與 grep 關鍵字）
 ├── scripts/
