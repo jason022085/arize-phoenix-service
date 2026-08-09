@@ -1,0 +1,14 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Phoenix local data & secrets
+data/
+.local-keys/
+jar_*.txt
+gql_*.json
+
+# OS
+.DS_Store
+Thumbs.db

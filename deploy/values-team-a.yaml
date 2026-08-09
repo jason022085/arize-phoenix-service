@@ -1,0 +1,54 @@
+# ============================================================
+# Phoenix 專案 A 部署設定（K8s / Helm）
+# 對應本地驗證架構：共用 PostgreSQL + schema 隔離
+# chart: oci://registry-1.docker.io/arizephoenix/phoenix-helm
+# ============================================================
+
+# 每個專案 2 個 replica（水平擴展 + 滾動升級不中斷）
+replicaCount: 2
+
+# ---- 資料庫：公司既有 managed PostgreSQL（RDS/Cloud SQL/Azure Database）----
+# 不啟用 chart 內建 PG（那是簡易 StatefulSet，正式環境用公司 managed 服務）
+postgresql:
+  enabled: false
+
+database:
+  # trace 保留 90 天（0 = 永久保留）
+  defaultRetentionPolicyDays: 90
+  postgres:
+    host: "<PG_HOST>"            # ← 公司 PG endpoint，例如 xxx.rds.amazonaws.com
+    port: 5432
+    db: "phoenix_central"        # ← 與專案 B 共用同一個 database
+    user: "phoenix"              # ← PG 帳號（可共用；密碼由 auth.secret 注入）
+    schema: "team_a"             # ← 專案 A 的 schema（隔離關鍵！B 用 team_b）
+    # readReplicaUrl: "postgresql://..."   # 大量 UI 查詢時加讀複本
+
+# ---- Phoenix server ----
+server:
+  # 每個 release 有自己的 Service，port 不需像本地各開不同
+  port: 6006
+  grpcPort: 4317
+  enablePrometheus: true         # 進公司 Prometheus/Grafana
+  telemetryEnabled: false        # 企業隱私：關閉分析回傳
+  allowExternalResources: false  # 內網部署：不抓 Google Fonts 等外部資源
+  maxSpansQueueSize: 20000
+  allowExternalResources: false
+  # 內建 MCP server：保留，但關閉 code execution（sandbox 風險）
+  enableMcpServer: true
+  enableMcpCodeMode: false
+
+# ---- 對外 ----
+ingress:
+  enabled: true
+  host: phoenix-a.observability.internal.example.com   # ← 公司內網 ingress host
+  tls:
+    enabled: true                # 依公司 TLS 策略（cert-manager/ingress 註解）
+
+# ---- 認證 ----
+auth:
+  enableAuth: true
+  enableStrongPasswordPolicy: true
+  # 留空 = chart 自動產生 PHOENIX_SECRET / admin 初始密碼（建議）
+  defaultAdminPassword: ""
+  createSecret: true
+  # admins: "專案A管理員=admin-a@example.com"   # 額外 admin 帳號（第一次登入改密碼）

@@ -1,0 +1,40 @@
+# ============================================================
+# Phoenix 專案 B 部署設定（K8s / Helm）
+# 與 team-a 共用同一台 PostgreSQL，schema 用 team_b 隔離
+# ============================================================
+
+replicaCount: 2
+
+# 外部 managed PostgreSQL（與 team-a 同一台）
+postgresql:
+  enabled: false
+
+database:
+  defaultRetentionPolicyDays: 90
+  postgres:
+    host: "<PG_HOST>"            # ← 同 team-a 的 PG endpoint
+    port: 5432
+    db: "phoenix_central"        # ← 同一個 database
+    user: "phoenix"
+    schema: "team_b"             # ← 專案 B 的 schema（與 team_a 隔離）
+
+server:
+  port: 6006
+  grpcPort: 4317
+  enablePrometheus: true
+  telemetryEnabled: false
+  allowExternalResources: false
+  enableMcpServer: true
+  enableMcpCodeMode: false
+
+ingress:
+  enabled: true
+  host: phoenix-b.observability.internal.example.com   # ← B 自己的 host
+  tls:
+    enabled: true
+
+auth:
+  enableAuth: true
+  enableStrongPasswordPolicy: true
+  defaultAdminPassword: ""
+  createSecret: true
